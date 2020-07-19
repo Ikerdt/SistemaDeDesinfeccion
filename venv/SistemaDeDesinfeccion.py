@@ -66,11 +66,11 @@ class PageOne(Frame):
         self.value3 = 0
         for i in range(12):
             imagen=Image.open(f"Imagenes/GIF_Waiting/waiting_{i}.jpg")
-            imagen=imagen.resize((200, 200), Image.ANTIALIAS)
+            imagen=imagen.resize((150, 150), Image.ANTIALIAS)
             wait.append(ImageTk.PhotoImage(imagen))
         self.change = controller
-        lab_wait = Label(self,image=wait[0])
-        lab_wait.place(x=530,y=200)
+        lab_wait = Label(self,image=wait[0],padding=-5)
+        lab_wait.place(x=565,y=110)
         lab_wait.after(100, lambda: self.refresh_label2())
 
     def refresh_label2(self):
@@ -115,6 +115,10 @@ class PageTwo(Frame):
         run_image = ImageTk.PhotoImage(run_image)
         config_canvas2.create_image(0, 0, anchor=NW, image=run_image)
         config_canvas2.pack()
+        #Botones
+        #start_page = Button(self, text="Start Page", background='white', font=("Helvetica"),
+         #                   command=lambda: controller.show_frame(StartPage))
+        #start_page.place(x=654, y=10)
         self.bind("<<ShowFrame>>", self.on_show_frame)
 
     def on_show_frame(self, event):
