@@ -2,6 +2,8 @@ from tkinter import *
 from tkinter.ttk import *
 import random,time
 from PIL import ImageTk, Image
+import pyautogui
+
 
 
 class App(Tk):
@@ -13,7 +15,7 @@ class App(Tk):
         container.grid_rowconfigure(0, weight=100)
         container.grid_columnconfigure(0, weight=100)
         self.frames = {}
-        for F in (StartPage, PageOne,PageTwo):
+        for F in (StartPage, PageOne,PageTwo,PageThree):
             frame = F(container, self)
             self.frames[F] = frame
             frame.grid(row=0, column=0, sticky="nsew")
@@ -39,7 +41,7 @@ class StartPage(Frame):
         progress = Progressbar(self,orient=HORIZONTAL,
                                length=1000, mode='determinate')
         progress.place(x=150,y=680)
-        progress.after(1000,lambda : self.refresh_label())
+        progress.after(50,lambda : self.refresh_label())
 
     def refresh_label(self):
         global progress
@@ -47,9 +49,9 @@ class StartPage(Frame):
         progress.update_idletasks()
         self.value+=10
         if (self.value==110):
-            progress.after(1000, lambda: self.change.show_frame(PageOne))
+            progress.after(50, lambda: self.change.show_frame(PageOne))
             return()
-        progress.after(1000, lambda: self.refresh_label())
+        progress.after(50, lambda: self.refresh_label())
 
 class PageOne(Frame):
     def __init__(self, parent, controller):
@@ -71,7 +73,7 @@ class PageOne(Frame):
         self.change = controller
         lab_wait = Label(self,image=wait[0],padding=-5)
         lab_wait.place(x=565,y=110)
-        lab_wait.after(100, lambda: self.refresh_label2())
+        lab_wait.after(5, lambda: self.refresh_label2())
 
     def refresh_label2(self):
         global config_image,wait,lab_wait
@@ -81,20 +83,20 @@ class PageOne(Frame):
             self.value2=0
             if (self.value3==10):
                 self.value3 += 1
-                lab_wait.after(10, lambda: self.FAN_ON())
-                lab_wait.after(80, lambda: self.refresh_label2())
+                lab_wait.after(5, lambda: self.FAN_ON())
+                lab_wait.after(5, lambda: self.refresh_label2())
             elif (self.value3==15):
                 self.value3 += 1
-                lab_wait.after(10, lambda: self.HUMIDIFIER_ON())
-                lab_wait.after(80, lambda: self.refresh_label2())
+                lab_wait.after(5, lambda: self.HUMIDIFIER_ON())
+                lab_wait.after(850, lambda: self.refresh_label2())
             elif(self.value3==20):
                 self.change.show_frame(PageTwo)
                 return()
             else:
                 self.value3+=1
-                lab_wait.after(100, lambda: self.refresh_label2())
+                lab_wait.after(5, lambda: self.refresh_label2())
         else:
-            lab_wait.after(100,lambda: self.refresh_label2())
+            lab_wait.after(5,lambda: self.refresh_label2())
     def FAN_ON(self):
         '''Prender Ventilador'''
         print("Ventilador ON")
@@ -116,13 +118,20 @@ class PageTwo(Frame):
         config_canvas2.create_image(0, 0, anchor=NW, image=run_image)
         config_canvas2.pack()
         #Botones
-        #start_page = Button(self, text="Start Page", background='white', font=("Helvetica"),
-         #                   command=lambda: controller.show_frame(StartPage))
-        #start_page.place(x=654, y=10)
+
+        config_canvas2.bind("<Button 1>", lambda x: self.getorigin(controller))
         self.bind("<<ShowFrame>>", self.on_show_frame)
+
 
     def on_show_frame(self, event):
         print("I am being shown...")
+
+    def getorigin(event,control):
+        x, y = pyautogui.position()
+        print(x, y)
+        if (x > 975 and x < 1200 and y > 170 and y < 320):
+            control.show_frame(PageThree)
+            return ()
 
 
         #BOTONES
@@ -132,6 +141,25 @@ class PageTwo(Frame):
         page_one = Button(self, text="Page One", image=back,borderwidth=0,highlightthickness = 0, padx=0, pady=0,command=lambda: controller.show_frame(PageOne))
         page_one.place(x=14, y=10)
         '''
+class PageThree(Frame):
+    def __init__(self, parent, controller):
+        global config_main_image
+        Frame.__init__(self, parent)
+        config_canvas3 = Canvas(self, width=1280, height=720)
+        config_main_image = Image.open("Imagenes/Configuracion2.jpg")
+        config_main_image = config_main_image.resize((1280, 720), Image.ANTIALIAS)
+        config_main_image = ImageTk.PhotoImage(config_main_image)
+        config_canvas3.create_image(0, 0, anchor=NW, image=config_main_image)
+        config_canvas3.pack()
+        config_canvas3.bind("<Button 1>", lambda x:self.getorigin(controller))
+
+    def getorigin(event,control):
+        x, y = pyautogui.position()
+        print(x,y)
+        if (x>15 and x<180 and y>50 and y<150):
+            control.show_frame(PageTwo)
+            return ()
+
 
 app = App()
 app.title('Sistema de desinfeccion OZONO')
