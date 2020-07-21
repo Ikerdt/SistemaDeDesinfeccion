@@ -35,7 +35,7 @@ def OZONE_OFF():
 def GET_LECTURE():
     """Obtiene lecturas de los sensores"""
     print("Getting data...")
-    Ozone_Measure=12 #TEST VALUE
+    Ozone_Measure=121 #TEST VALUE
     Temp_Measure=25 #TEST VALUE
     Hum_Measure=60 #TEST VALUE
     return (Ozone_Measure,Temp_Measure,Hum_Measure)

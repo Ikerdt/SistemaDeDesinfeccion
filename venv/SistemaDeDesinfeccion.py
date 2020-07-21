@@ -6,6 +6,7 @@ import random,time
 from PIL import ImageTk, Image
 import pyautogui,sensores
 
+imhere='A'
 
 
 class App(Tk):
@@ -78,35 +79,36 @@ class PageOne(Frame):
         self.change = controller
         lab_wait = Label(self,image=wait[0],padding=-5)
         lab_wait.place(x=213,y=46)
-        lab_wait.after(100, lambda: self.refresh_label2())
+        lab_wait.after(50, lambda: self.refresh_label2())
 
     def refresh_label2(self):
-        global config_image,wait,lab_wait
+        global config_image,wait,lab_wait,Ozono, Temp, Hum
         lab_wait.configure(image=wait[self.value2])
         self.value2 += 1
         if (self.value2==12):
             self.value2=0
             if (self.value3==20):
                 self.value3 += 1
-                lab_wait.after(100, sensores.FAN_ON())
-                lab_wait.after(100, lambda: self.refresh_label2())
+                lab_wait.after(50, sensores.FAN_ON())
+                lab_wait.after(50, lambda: self.refresh_label2())
             elif (self.value3==25):
                 self.value3 += 1
-                lab_wait.after(100, sensores.HUMIDIFIER_ON())
-                lab_wait.after(850, lambda: self.refresh_label2())
+                lab_wait.after(50, sensores.HUMIDIFIER_ON())
+                lab_wait.after(50, lambda: self.refresh_label2())
             elif(self.value3==30):
+                Ozono, Temp, Hum = sensores.GET_LECTURE()
                 self.change.show_frame(PageTwo)
                 return()
             else:
                 self.value3+=1
-                lab_wait.after(100, lambda: self.refresh_label2())
+                lab_wait.after(50, lambda: self.refresh_label2())
         else:
-            lab_wait.after(100,lambda: self.refresh_label2())
+            lab_wait.after(50,lambda: self.refresh_label2())
 
 
 class PageTwo(Frame):
     def __init__(self, parent, controller):
-        global run_image
+        global run_image,config_canvas2,lab_wait2
         Frame.__init__(self, parent)
         config_canvas2 = Canvas(self, width=480, height=280)
         run_image = Image.open("Imagenes/Configuracion.jpg")
@@ -114,22 +116,47 @@ class PageTwo(Frame):
         run_image = ImageTk.PhotoImage(run_image)
         config_canvas2.create_image(0, 0, anchor=NW, image=run_image)
         config_canvas2.pack()
-        #Botones
 
         config_canvas2.bind("<Button 1>", lambda x: self.getorigin(controller))
-        self.bind("<<ShowFrame>>", self.on_show_frame)
+        self.bind("<<ShowFrame>>",self.on_show_frame)
 
+    def on_show_frame(self,event):
+        global Ozono, Temp, Hum,config_canvas2,Oz,Hu,Te,display
+        display=1
+        Oz=config_canvas2.create_text(65, 100, fill="gray", font="Helvetica 20 bold",
+                                   text=f"{Ozono}ppm")
+        Hu=config_canvas2.create_text(65, 160, fill="gray", font="Helvetica 20 bold",
+                                   text=f"{Hum}%")
+        Te=config_canvas2.create_text(65, 230, fill="gray", font="Helvetica 20 bold",
+                                   text=f"{Temp}°C")
 
-    def on_show_frame(self, event):
-        print("I am being shown...")
+        self.after(10000,self.refresh_data)
+
+        return()
+
+    def refresh_data(self):
+        global Ozono, Temp, Hum,Oz,Hu,Te,config_canvas2,display
+
+        if (display==1):
+            Ozono, Temp, Hum=sensores.GET_LECTURE()
+            config_canvas2.itemconfigure(Oz,text=f"{Ozono}ppm")
+            config_canvas2.itemconfigure(Hu,text=f"{Hum}%")
+            config_canvas2.itemconfigure(Te,text=f"{Temp}°C")
+            self.after(10000, self.refresh_data)
+
+            return()
+        return()
 
     def getorigin(event,control):
+        global display
         x, y = pyautogui.position()
         print(x, y)
         if (x > 365 and x < 450 and y > 97 and y < 155):
+            display = 3
             control.show_frame(PageThree)
             return ()
         elif (x > 295 and x < 460 and y > 195 and y < 310):
+            display = 4
             control.show_frame(PageFour)
             return ()
         return()
@@ -137,7 +164,7 @@ class PageTwo(Frame):
 
 class PageThree(Frame):
     def __init__(self, parent, controller):
-        global config_main_image,imhere
+        global config_main_image,imhere,all_comboboxes
         Frame.__init__(self, parent)
         config_canvas3 = Canvas(self, width=480, height=280)
         config_main_image = Image.open("Imagenes/Configuracion_A.jpg")
@@ -145,9 +172,42 @@ class PageThree(Frame):
         config_main_image = config_main_image.resize((480, 280), Image.ANTIALIAS)
         config_main_image = ImageTk.PhotoImage(config_main_image)
         image_on_canvas =config_canvas3.create_image(0, 0, anchor=NW, image=config_main_image)
-        #config_canvas3.create_image(0, 0, anchor=NW, image=config_main_image)
         config_canvas3.pack()
         config_canvas3.bind("<Button 1>", lambda x:self.getorigin(controller,config_canvas3,image_on_canvas))
+
+        #
+        val = []
+        for a in range(61):
+            if(a!=0):
+                val.append(a)
+        TA_A = Combobox(self, values=(val), width=2,justify="center",state='readonly')
+        TA_A.set("3")
+        TA_A.place(x=258, y=87)
+        TB_A = Combobox(self, values=(val), width=2,justify="center",state='readonly')
+        TB_A.set("10")
+        TB_A.place(x=345, y=87)
+        TC_A = Combobox(self, values=(val), width=2,justify="center",state='readonly')
+        TC_A.set("15")
+        TC_A.place(x=425, y=87)
+        TA_B = Combobox(self, values=(val), width=2,justify="center",state='readonly')
+        TA_B.set("4")
+        TA_B.place(x=258,y=145)
+        TB_B = Combobox(self, values=(val), width=2,justify="center",state='readonly')
+        TB_B.set("12")
+        TB_B.place(x=345, y=145)
+        TC_B = Combobox(self, values=(val), width=2,justify="center",state='readonly')
+        TC_B.set("18")
+        TC_B.place(x=425, y=145)
+        TA_C = Combobox(self, values=(val), width=2,justify="center",state='readonly')
+        TA_C.set("5")
+        TA_C.place(x=258, y=220)
+        TB_C = Combobox(self, values=(val), width=2,justify="center",state='readonly')
+        TB_C.set("15")
+        TB_C.place(x=345, y=220)
+        TC_C = Combobox(self, values=(val), width=2,justify="center",state='readonly')
+        TC_C.set("20")
+        TC_C.place(x=425, y=220)
+        all_comboboxes=(TA_A,TB_A,TC_A,TA_B,TB_B,TC_B,TA_C,TB_C,TC_C)
 
     def getorigin(event,control,canva,image_on_canvas):
         global test_image,imhere
@@ -188,24 +248,128 @@ class PageThree(Frame):
 
 class PageFour(Frame):
     def __init__(self, parent, controller):
-        global operation_image
+        global operation_image,config_canvas4,canva_image
         Frame.__init__(self, parent)
         config_canvas4 = Canvas(self, width=480, height=280)
-        operation_image = Image.open("Imagenes/operacion.jpg")
+        operation_image = Image.open("Imagenes/operacion_1.jpg")
         operation_image = operation_image.resize((480, 280), Image.ANTIALIAS)
         operation_image = ImageTk.PhotoImage(operation_image)
-        config_canvas4.create_image(0, 0, anchor=NW, image=operation_image)
+        canva_image=config_canvas4.create_image(0, 0, anchor=NW, image=operation_image)
         config_canvas4.pack()
         config_canvas4.bind("<Button 1>", lambda x:self.getorigin(controller))
+        self.bind("<<ShowFrame>>", self.on_show_frame)
 
+    def on_show_frame(self, event):
+        global imhere,all_comboboxes,config_canvas4
+        global Ozono, Temp, Hum, Oz, Hu, Te, display
+        if (imhere=='A'):
+            self.TA_Value=all_comboboxes[0].get()
+            self.TB_Value = all_comboboxes[1].get()
+            self.TC_Value = all_comboboxes[2].get()
+            print(self.TA_Value,self.TB_Value,self.TC_Value)
+        elif (imhere=='B'):
+            self.TA_Value=all_comboboxes[3].get()
+            self.TB_Value = all_comboboxes[4].get()
+            self.TC_Value = all_comboboxes[5].get()
+            print(self.TA_Value,self.TB_Value,self.TC_Value)
+        elif (imhere=='C'):
+            self.TA_Value=all_comboboxes[6].get()
+            self.TB_Value = all_comboboxes[7].get()
+            self.TC_Value = all_comboboxes[8].get()
+            print(self.TA_Value,self.TB_Value,self.TC_Value)
+        self.values = (self.TA_Value, self.TB_Value, self.TC_Value)
+        self.state=0
+        self.Countdown = config_canvas4.create_text(310, 225, fill="white", font="Helvetica 38 bold",
+                                        text=f"{self.TA_Value}:00")
+        self.TA_Value=int(self.TA_Value)-1
+        self.seconds=59
+        self.after(1000, self.timer,self.Countdown,self.TA_Value)
+
+
+
+        Oz = config_canvas4.create_text(65, 100, fill="gray", font="Helvetica 20 bold",
+                                        text=f"{Ozono}ppm")
+        Hu = config_canvas4.create_text(65, 160, fill="gray", font="Helvetica 20 bold",
+                                        text=f"{Hum}%")
+        Te = config_canvas4.create_text(65, 230, fill="gray", font="Helvetica 20 bold",
+                                        text=f"{Temp}°C")
+        self.after(10000, self.refresh_data)
+        return()
+
+    def timer(self,count,mins):
+        global config_canvas4,test_operation_image,canva_image
+        config_canvas4.itemconfigure(count, text=f"{mins}:{self.seconds}")
+        self.seconds =int(self.seconds)-1
+        if (self.seconds==-1):
+            mins =int(mins)-1
+            self.seconds = 59
+            if(mins==-1):
+                print("ACABE")
+                config_canvas4.delete(count)
+                self.state+=1
+                if(self.state==1):
+                    test_operation_image = Image.open("Imagenes/operacion_2.jpg")
+                    test_operation_image = test_operation_image.resize((480, 280), Image.ANTIALIAS)
+                    test_operation_image = ImageTk.PhotoImage(test_operation_image)
+                    config_canvas4.itemconfig(canva_image, image=test_operation_image)
+                    config_canvas4.image = test_operation_image
+                    sensores.OZONE_ON()
+                    self.Countdown = config_canvas4.create_text(310, 225, fill="white", font="Helvetica 38 bold",
+                                                                text=f"{self.TB_Value}:00")
+                    self.TB_Value = int(self.TB_Value) - 1
+                    self.seconds = 59
+                    self.after(1000, self.timer, self.Countdown, self.TB_Value)
+                elif(self.state==2):
+                    test_operation_image = Image.open("Imagenes/operacion_3.jpg")
+                    test_operation_image = test_operation_image.resize((480, 280), Image.ANTIALIAS)
+                    test_operation_image = ImageTk.PhotoImage(test_operation_image)
+                    config_canvas4.itemconfig(canva_image, image=test_operation_image)
+                    config_canvas4.image = test_operation_image
+                    #agregar compesacion ozono
+                    self.Countdown = config_canvas4.create_text(310, 225, fill="white", font="Helvetica 38 bold",
+                                                                text=f"{self.TC_Value}:00")
+                    self.TC_Value = int(self.TC_Value) - 1
+                    self.seconds = 59
+                    self.after(1000, self.timer, self.Countdown, self.TC_Value)
+                return()
+        if (self.seconds<10):
+            self.seconds=str("0"+str(self.seconds))
+        self.after(1000, self.timer,count,mins)
+        return()
+
+    def refresh_data(self):
+        global Ozono, Temp, Hum,Oz,Hu,Te,config_canvas4,display
+        if (display==4):
+            Ozono, Temp, Hum=sensores.GET_LECTURE()
+            config_canvas4.itemconfigure(Oz,text=f"{Ozono}ppm")
+            config_canvas4.itemconfigure(Hu,text=f"{Hum}%")
+            config_canvas4.itemconfigure(Te,text=f"{Temp}°C")
+            self.after(10000, self.refresh_data)
+            return()
+        return()
     def getorigin(event,control):
         x, y = pyautogui.position()
         print(x,y)
         if (x>15 and x<180 and y>50 and y<150):
             control.show_frame(PageTwo)
             return ()
-
-
+'''
+def timer(segundos,count,mins):
+    global config_canvas4
+    config_canvas4.itemconfigure(count, text=f"{mins}:{self.seconds}")
+    self.seconds =int(self.seconds)-1
+    if (self.seconds==-1):
+        mins =int(mins)-1
+        self.seconds = 59
+        if(mins==-1):
+            print("ACABE")
+            config_canvas4.delete(count)
+            return()
+    if (self.seconds<10):
+        self.seconds=str("0"+str(self.seconds))
+    self.after(1000, self.timer(self.Countdown,self.TA_Value))
+    return()
+'''
 app = App()
 app.title('Sistema de desinfeccion OZONO')
 app.mainloop()
