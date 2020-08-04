@@ -402,15 +402,20 @@ class PageFour(Frame):
 
             elif(Ozono<=(30*0.01)):
                 sensores.Beeper_ON()
-                self.after(500, sensores.Beeper_OFF())
+                self.after(500, self.Nothing)
+                sensores.Beeper_OFF()
+                self.after(500, self.Nothing)
                 sensores.Beeper_ON()
-                self.after(500, sensores.Beeper_OFF())
+                self.after(500, self.Nothing)
+                sensores.Beeper_OFF()
+                self.after(500, self.Nothing)
                 sensores.Beeper_ON()
-                self.after(500, sensores.Beeper_OFF())
+                self.after(500, self.Nothing)
+                sensores.Beeper_OFF()
+                self.after(500, self.Nothing)
                 sensores.Beeper_ON()
-                self.after(500, sensores.Beeper_OFF())
-                sensores.Beeper_ON()
-                self.after(500, sensores.Beeper_OFF())
+                self.after(500, self.Nothing)
+                sensores.Beeper_OFF()
                 State = "Finalizar"
                 display = 4
                 sensores.OZONE_OFF()
@@ -447,7 +452,8 @@ class PageFour(Frame):
         return()
 
 
-
+    def Nothing(self):
+            return()
 
     def getorigin(event,control):
         x, y = pyautogui.position()
@@ -463,23 +469,7 @@ class PageFour(Frame):
             os.system('sudo shutdown -r now')
             return ()
 
-'''
-def timer(segundos,count,mins):
-    global config_canvas4
-    config_canvas4.itemconfigure(count, text=f"{mins}:{self.seconds}")
-    self.seconds =int(self.seconds)-1
-    if (self.seconds==-1):
-        mins =int(mins)-1
-        self.seconds = 59
-        if(mins==-1):
-            print("ACABE")
-            config_canvas4.delete(count)
-            return()
-    if (self.seconds<10):
-        self.seconds=str("0"+str(self.seconds))
-    self.after(1000, self.timer(self.Countdown,self.TA_Value))
-    return()
-'''
+
 app = App()
 app.title('Sistema de desinfeccion OZONO')
 app.mainloop()
