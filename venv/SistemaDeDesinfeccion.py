@@ -4,10 +4,10 @@ from tkinter import *
 from tkinter.ttk import *
 import random,time
 from PIL import ImageTk, Image
-import pyautogui,sensores
+import pyautogui,sensores,os
 
 imhere='A'
-
+State="Start"
 
 class App(Tk):
     def __init__(self, *args, **kwargs):
@@ -116,19 +116,24 @@ class PageTwo(Frame):
         run_image = ImageTk.PhotoImage(run_image)
         config_canvas2.create_image(0, 0, anchor=NW, image=run_image)
         config_canvas2.pack()
-
+        self.flag=False
         config_canvas2.bind("<Button 1>", lambda x: self.getorigin(controller))
         self.bind("<<ShowFrame>>",self.on_show_frame)
 
     def on_show_frame(self,event):
         global Ozono, Temp, Hum,config_canvas2,Oz,Hu,Te,display
         display=1
-        Oz=config_canvas2.create_text(65, 100, fill="gray", font="Helvetica 20 bold",
-                                   text=f"{Ozono}ppm")
-        Hu=config_canvas2.create_text(65, 160, fill="gray", font="Helvetica 20 bold",
-                                   text=f"{Hum}%")
-        Te=config_canvas2.create_text(65, 230, fill="gray", font="Helvetica 20 bold",
-                                   text=f"{Temp}°C")
+        if (self.flag==False):
+            Oz=config_canvas2.create_text(80, 85, fill="gray", font="Helvetica 20 bold",
+                                       text=f"{Ozono}ppm")
+            Hu=config_canvas2.create_text(75, 150, fill="gray", font="Helvetica 20 bold",
+                                       text=f"{Hum}%")
+            Te=config_canvas2.create_text(75, 220, fill="gray", font="Helvetica 20 bold",
+                                       text=f"{Temp}°C")
+            self.flag==True
+        config_canvas2.itemconfigure(Oz, text=f"{Ozono}ppm")
+        config_canvas2.itemconfigure(Hu, text=f"{Hum}%")
+        config_canvas2.itemconfigure(Te, text=f"{Temp}°C")
 
         self.after(10000,self.refresh_data)
 
@@ -152,7 +157,7 @@ class PageTwo(Frame):
         x, y = pyautogui.position()
         print(x, y)
         if (x > 365 and x < 450 and y > 97 and y < 155):
-            display = 3
+            #display = 3
             control.show_frame(PageThree)
             return ()
         elif (x > 295 and x < 460 and y > 195 and y < 310):
@@ -289,15 +294,15 @@ class PageFour(Frame):
 
         Oz = config_canvas4.create_text(65, 100, fill="gray", font="Helvetica 20 bold",
                                         text=f"{Ozono}ppm")
-        Hu = config_canvas4.create_text(65, 160, fill="gray", font="Helvetica 20 bold",
+        Hu = config_canvas4.create_text(65, 155, fill="gray", font="Helvetica 20 bold",
                                         text=f"{Hum}%")
-        Te = config_canvas4.create_text(65, 230, fill="gray", font="Helvetica 20 bold",
+        Te = config_canvas4.create_text(65, 220, fill="gray", font="Helvetica 20 bold",
                                         text=f"{Temp}°C")
         self.after(10000, self.refresh_data)
         return()
 
     def timer(self,count,mins):
-        global config_canvas4,test_operation_image,canva_image
+        global config_canvas4,test_operation_image,canva_image,Ozono,State,display,Oz, Hu, Te
         config_canvas4.itemconfigure(count, text=f"{mins}:{self.seconds}")
         self.seconds =int(self.seconds)-1
         if (self.seconds==-1):
@@ -320,17 +325,50 @@ class PageFour(Frame):
                     self.seconds = 59
                     self.after(1000, self.timer, self.Countdown, self.TB_Value)
                 elif(self.state==2):
-                    test_operation_image = Image.open("Imagenes/operacion_3.jpg")
+                    if (Ozono<30):
+                        State="Error"
+                        test_operation_image = Image.open("Imagenes/operacion_error.jpg")
+                        test_operation_image = test_operation_image.resize((480, 280), Image.ANTIALIAS)
+                        test_operation_image = ImageTk.PhotoImage(test_operation_image)
+                        config_canvas4.itemconfig(canva_image, image=test_operation_image)
+                        config_canvas4.image = test_operation_image
+                        return()
+                    else:
+                        test_operation_image = Image.open("Imagenes/operacion_3.jpg")
+                        test_operation_image = test_operation_image.resize((480, 280), Image.ANTIALIAS)
+                        test_operation_image = ImageTk.PhotoImage(test_operation_image)
+                        config_canvas4.itemconfig(canva_image, image=test_operation_image)
+                        config_canvas4.image = test_operation_image
+                        #agregar compesacion ozono
+                        State="Generacion"
+                        self.after(1000, self.Comp_Ozono)
+                        self.Countdown = config_canvas4.create_text(310, 225, fill="white", font="Helvetica 38 bold",
+                                                                    text=f"{self.TC_Value}:00")
+                        self.TC_Value = int(self.TC_Value) - 1
+                        self.seconds = 59
+                        self.after(1000, self.timer, self.Countdown, self.TC_Value)
+                elif (self.state == 3):
+                    State = "Destruccion"
+                    display=5
+                    sensores.OZONE_OFF()
+                    sensores.HUMIDIFIER_OFF()
+                    test_operation_image = Image.open("Imagenes/operacion_4.jpg")
                     test_operation_image = test_operation_image.resize((480, 280), Image.ANTIALIAS)
                     test_operation_image = ImageTk.PhotoImage(test_operation_image)
                     config_canvas4.itemconfig(canva_image, image=test_operation_image)
                     config_canvas4.image = test_operation_image
-                    #agregar compesacion ozono
-                    self.Countdown = config_canvas4.create_text(310, 225, fill="white", font="Helvetica 38 bold",
-                                                                text=f"{self.TC_Value}:00")
-                    self.TC_Value = int(self.TC_Value) - 1
-                    self.seconds = 59
-                    self.after(1000, self.timer, self.Countdown, self.TC_Value)
+                    config_canvas4.delete(Oz)
+                    config_canvas4.delete(Hu)
+                    config_canvas4.delete(Te)
+                    Oz = config_canvas4.create_text(300,230, fill="black", font="Helvetica 20 bold",
+                                                    text=f"{Ozono}ppm")
+                    Hu = config_canvas4.create_text(65, 90, fill="gray", font="Helvetica 20 bold",
+                                                    text=f"{Hum}%")
+                    Te = config_canvas4.create_text(65, 155, fill="gray", font="Helvetica 20 bold",
+                                                    text=f"{Temp}°C")
+                    self.after(100, self.refresh_data2)
+
+
                 return()
         if (self.seconds<10):
             self.seconds=str("0"+str(self.seconds))
@@ -344,15 +382,81 @@ class PageFour(Frame):
             config_canvas4.itemconfigure(Oz,text=f"{Ozono}ppm")
             config_canvas4.itemconfigure(Hu,text=f"{Hum}%")
             config_canvas4.itemconfigure(Te,text=f"{Temp}°C")
-            self.after(10000, self.refresh_data)
+            self.after(5000, self.refresh_data)
+        return()
+    def refresh_data2(self):
+        global Ozono, Temp, Hum, Oz, Hu, Te, config_canvas4, display,test_operation_image,canva_image,State
+        if (display == 5):
+            Ozono, Temp, Hum = sensores.GET_LECTURE()
+            Ozono = 0.02 #BORRAR TEST VALUE
+            config_canvas4.itemconfigure(Oz, text=f"{Ozono}ppm")
+            config_canvas4.itemconfigure(Hu, text=f"{Hum}%")
+            config_canvas4.itemconfigure(Te, text=f"{Temp}°C")
+
+            if(Ozono<=(30*0.1) and Ozono>(30*0.01)):
+                sensores.Beeper_ON()
+                self.after(1000, sensores.Beeper_OFF())
+
+            elif(Ozono<=(30*0.01)):
+                sensores.Beeper_ON()
+                self.after(500, sensores.Beeper_OFF())
+                sensores.Beeper_ON()
+                self.after(500, sensores.Beeper_OFF())
+                sensores.Beeper_ON()
+                self.after(500, sensores.Beeper_OFF())
+                sensores.Beeper_ON()
+                self.after(500, sensores.Beeper_OFF())
+                sensores.Beeper_ON()
+                self.after(500, sensores.Beeper_OFF())
+                State = "Finalizar"
+                display = 4
+                test_operation_image = Image.open("Imagenes/operacion_5.jpg")
+                test_operation_image = test_operation_image.resize((480, 280), Image.ANTIALIAS)
+                test_operation_image = ImageTk.PhotoImage(test_operation_image)
+                config_canvas4.itemconfig(canva_image, image=test_operation_image)
+                config_canvas4.image = test_operation_image
+                config_canvas4.delete(Oz)
+                config_canvas4.delete(Hu)
+                config_canvas4.delete(Te)
+                Oz = config_canvas4.create_text(65, 100, fill="gray", font="Helvetica 20 bold",
+                                                text=f"{Ozono}ppm")
+                Hu = config_canvas4.create_text(65, 155, fill="gray", font="Helvetica 20 bold",
+                                                text=f"{Hum}%")
+                Te = config_canvas4.create_text(65, 220, fill="gray", font="Helvetica 20 bold",
+                                                text=f"{Temp}°C")
+                self.after(100, self.refresh_data)
+                return()
+            self.after(5000, self.refresh_data2)
+        return()
+
+    def Comp_Ozono(self):
+        global Ozono,State
+        while(State=="Generacion"):
+            if(Ozono<30):
+                sensores.OZONE_ON()
+            else:
+                sensores.OZONE_OFF()
+            self.after(5000, self.Comp_Ozono)
             return()
         return()
+
+
+
+
     def getorigin(event,control):
         x, y = pyautogui.position()
         print(x,y)
-        if (x>15 and x<180 and y>50 and y<150):
-            control.show_frame(PageTwo)
+        if (State=="Error" and x>380 and x<465 and y>250 and y<325):
+            print("Reiniciando Raspberry...")
+            #os.system('sudo reebot -r now')
+            #os.system('sudo shutdown -r now')
             return ()
+        elif(State=="Finalizar" and x>150 and x<480 and y>250 and y<325):
+            print("Apagando Raspberry...")
+            #os.system('sudo reebot -r now')
+            #os.system('sudo shutdown -r now')
+            return ()
+
 '''
 def timer(segundos,count,mins):
     global config_canvas4

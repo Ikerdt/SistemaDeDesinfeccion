@@ -35,7 +35,7 @@ def OZONE_OFF():
 def GET_LECTURE():
     """Obtiene lecturas de los sensores"""
     print("Getting data...")
-    Ozone_Measure=121 #TEST VALUE
+    Ozone_Measure=30 #TEST VALUE
     Temp_Measure=25 #TEST VALUE
     Hum_Measure=60 #TEST VALUE
     return (Ozone_Measure,Temp_Measure,Hum_Measure)
@@ -46,4 +46,12 @@ def GATE_OPEN():
 def GATE_CLOSE():
     '''Cierra la compuerta del filtro de ozono'''
     print("Closing gate...")
+    return()
+def Beeper_ON():
+    "Timbra"
+    print("Beep...")
+    return()
+def Beeper_OFF():
+    "Cancela el timbre"
+    print("...")
     return()
