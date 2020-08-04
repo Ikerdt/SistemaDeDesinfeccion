@@ -25,6 +25,7 @@ def FAN_ON():
     wiringpi.pinMode(IN1_MOTOR, 1) 
     wiringpi.pinMode(IN2_MOTOR, 1) 
     wiringpi.pinMode(BEEPER, 1) 
+    wiringpi.digitalWrite(BEEPER, 0)
     dhtDevice = adafruit_dht.DHT11(board.D26)
     print("Ventilador ON")
     wiringpi.digitalWrite(K1_FAN, 1)
