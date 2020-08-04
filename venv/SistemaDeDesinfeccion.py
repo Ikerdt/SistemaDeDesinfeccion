@@ -327,6 +327,9 @@ class PageFour(Frame):
                 elif(self.state==2):
                     if (Ozono<30):
                         State="Error"
+                        sensores.OZONE_OFF()
+                        sensores.HUMIDIFIER_OFF()
+                        sensores.FAN_OFF()
                         test_operation_image = Image.open("Imagenes/operacion_error.jpg")
                         test_operation_image = test_operation_image.resize((480, 280), Image.ANTIALIAS)
                         test_operation_image = ImageTk.PhotoImage(test_operation_image)
@@ -410,6 +413,9 @@ class PageFour(Frame):
                 self.after(500, sensores.Beeper_OFF())
                 State = "Finalizar"
                 display = 4
+                sensores.OZONE_OFF()
+                sensores.HUMIDIFIER_OFF()
+                sensores.FAN_OFF()
                 test_operation_image = Image.open("Imagenes/operacion_5.jpg")
                 test_operation_image = test_operation_image.resize((480, 280), Image.ANTIALIAS)
                 test_operation_image = ImageTk.PhotoImage(test_operation_image)
@@ -448,13 +454,13 @@ class PageFour(Frame):
         print(x,y)
         if (State=="Error" and x>380 and x<465 and y>250 and y<325):
             print("Reiniciando Raspberry...")
-            #os.system('sudo reebot -r now')
+            os.system('sudo reebot -r now')
             #os.system('sudo shutdown -r now')
             return ()
         elif(State=="Finalizar" and x>150 and x<480 and y>250 and y<325):
             print("Apagando Raspberry...")
             #os.system('sudo reebot -r now')
-            #os.system('sudo shutdown -r now')
+            os.system('sudo shutdown -r now')
             return ()
 
 '''
